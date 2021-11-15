@@ -41,8 +41,11 @@ public class FlabbyBird extends ApplicationAdapter {
 	Rectangle[] buttomTubeRectangles;
 	int score = 0;
 	int scoreTube = 0;
+	int highscore = 0;
 	BitmapFont Score;
+	BitmapFont HighScore;
 	Music music;
+	Preferences prefs;
 
 
 	@Override
@@ -71,9 +74,11 @@ public class FlabbyBird extends ApplicationAdapter {
 		Score = new BitmapFont();
 		Score.setColor(Color.WHITE);
 		Score.getData().setScale(5);
-		Preferences prefs = Gdx.app.getPreferences("game preferences");
+		HighScore = new BitmapFont();
+		HighScore.setColor(Color.WHITE);
+		HighScore.getData().setScale(5);
+		prefs = Gdx.app.getPreferences("game preferences");
 		startGame();
-
 	}
 	public void startGame() {
 		birdY  = Gdx.graphics.getHeight()/2 - birds[0].getHeight()/2;
@@ -136,6 +141,7 @@ public class FlabbyBird extends ApplicationAdapter {
 				//shapeRenderer.rect(tubeX[i],
 				//		Gdx.graphics.getHeight()/2-gap/2-bottomTube.getHeight() + tubeOffset[i],
 				//		bottomTube.getWidth(),bottomTube.getHeight());
+				//shapeRenderer.end();
 				if(Intersector.overlaps(birdCircle,topTubeRectangles[i]) || Intersector.overlaps(birdCircle,buttomTubeRectangles[i])){
 					Gdx.app.log("collision","yes");
 					gameState = 2;
@@ -155,9 +161,15 @@ public class FlabbyBird extends ApplicationAdapter {
 				gameState = 1;
 			}
 		}else if(gameState ==2){
+			if(score > highscore){
+				prefs.putInteger("highScore",score);
+				prefs.flush();
+			}
+			highscore = prefs.getInteger("highScore");
 			batch.draw(gameOver, Gdx.graphics.getWidth() / 2 - gameOver.getWidth() / 2,
 					Gdx.graphics.getHeight() / 2 - gameOver.getHeight() / 2);
 			Score.draw(batch,"Score:"+ String.valueOf(score),400,300);
+			HighScore.draw(batch,"HighScore:"+ String.valueOf(highscore),350,1500);
 			if (Gdx.input.justTouched()) {
 				gameState = 0;
 				startGame();
@@ -175,7 +187,6 @@ public class FlabbyBird extends ApplicationAdapter {
 		}
 
 		batch.end();
-		//shapeRenderer.end();
 	}
 	
 	@Override
