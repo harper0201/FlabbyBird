@@ -1,17 +1,16 @@
 package com.mygdx.flabbybrid;
 
-import com.badlogic.gdx.AbstractGraphics;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.Random;
 
@@ -19,12 +18,13 @@ public class FlabbyBird extends ApplicationAdapter {
 	SpriteBatch batch;
 	Texture background;
 	Texture[] birds;
+	Texture gameStart;
 	Texture gameOver;
 	int flapState = 0;
 	float birdY = 0;
 	float velocity = 0;
 	int gameState = 0;
-	float gravity = 2;
+	float gravity = 1;
 	float gap = 400;
 	Texture topTube;
 	Texture bottomTube;
@@ -38,10 +38,11 @@ public class FlabbyBird extends ApplicationAdapter {
 	Circle birdCircle;
 	//ShapeRenderer shapeRenderer;
 	Rectangle[] topTubeRectangles;
-	Rectangle[] buttonTubeRectangles;
+	Rectangle[] buttomTubeRectangles;
 	int score = 0;
 	int scoreTube = 0;
-	BitmapFont font;
+	BitmapFont Score;
+	Music music;
 
 
 	@Override
@@ -56,28 +57,33 @@ public class FlabbyBird extends ApplicationAdapter {
 		topTube = new Texture("toptube.png");
 		bottomTube = new Texture("bottomtube.png");
 		gameOver = new Texture("gameover.png");
+		gameStart = new Texture("gamestart.png");
+		music = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
+		music.setLooping(true);
+		music.setVolume(0.1f);
+		music.play();
 
 		maxTubeOffset = Gdx.graphics.getHeight()/2 - gap/2 - 100;
 		ramdomGenerotor = new Random();
 		distanceBetweenTubes = Gdx.graphics.getWidth()*3/4;
 		topTubeRectangles = new Rectangle[numberOfTubes];
-		buttonTubeRectangles = new Rectangle[numberOfTubes];
-		font = new BitmapFont();
-		font.setColor(Color.WHITE);
-		font.getData().setScale(10);
+		buttomTubeRectangles = new Rectangle[numberOfTubes];
+		Score = new BitmapFont();
+		Score.setColor(Color.WHITE);
+		Score.getData().setScale(5);
+		Preferences prefs = Gdx.app.getPreferences("game preferences");
 		startGame();
 
 	}
 	public void startGame() {
-		birdY  = Gdx.graphics.getHeight()/2 - birds[0].getWidth()/2;
+		birdY  = Gdx.graphics.getHeight()/2 - birds[0].getHeight()/2;
 		for(int i = 0; i < numberOfTubes; i++){
 			tubeOffset[i] =
 					(ramdomGenerotor.nextFloat() - 0.5f) *(Gdx.graphics.getHeight()- gap - 200);
 			tubeX[i] =
 					Gdx.graphics.getWidth()/2 - topTube.getWidth() + Gdx.graphics.getWidth() + i*distanceBetweenTubes;
 			topTubeRectangles[i] = new Rectangle();
-			buttonTubeRectangles[i] = new Rectangle();
-
+			buttomTubeRectangles[i] = new Rectangle();
 		}
 	}
 	@Override
@@ -85,6 +91,13 @@ public class FlabbyBird extends ApplicationAdapter {
 		batch.begin();
 		batch.draw(background,0,0, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
 		if (gameState == 1) {
+			batch.draw(birds[flapState],Gdx.graphics.getWidth()/2 - birds[flapState].getWidth()/2, birdY);
+			birdCircle.set(Gdx.graphics.getWidth()/2,birdY + birds[flapState].getHeight()/2,
+					birds[flapState].getWidth()/2);
+			//shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+			//shapeRenderer.setColor(Color.RED);
+			//shapeRenderer.circle(birdCircle.x,birdCircle.y,birdCircle.radius);
+			Score.draw(batch,String.valueOf(score),100,200);
 			if(tubeX[scoreTube] < Gdx.graphics.getWidth()/2){
 				score++;
 				if(scoreTube < numberOfTubes - 1){
@@ -95,12 +108,11 @@ public class FlabbyBird extends ApplicationAdapter {
 				}
 			}
 			if (Gdx.input.justTouched()) {
-				velocity = -30;
-
+				velocity = -20;
 			}
 			for(int i = 0 ; i < numberOfTubes; i++){
 				if(tubeX[i] < -topTube.getWidth()){
-					tubeX[i] = numberOfTubes * distanceBetweenTubes;
+					tubeX[i] += numberOfTubes * distanceBetweenTubes;
 					tubeOffset[i] =
 							(ramdomGenerotor.nextFloat() - 0.5f) *(Gdx.graphics.getHeight()- gap - 200);
 				}
@@ -115,11 +127,21 @@ public class FlabbyBird extends ApplicationAdapter {
 						new Rectangle(tubeX[i],
 								Gdx.graphics.getHeight()/2+ gap/2 + tubeOffset[i],
 								topTube.getWidth(),topTube.getHeight());
-				buttonTubeRectangles[i] = new Rectangle(tubeX[i],
+				buttomTubeRectangles[i] = new Rectangle(tubeX[i],
 						Gdx.graphics.getHeight()/2-gap/2-bottomTube.getHeight() + tubeOffset[i],
 						bottomTube.getWidth(),bottomTube.getHeight());
+				//shapeRenderer.rect(tubeX[i],
+				//		Gdx.graphics.getHeight()/2+ gap/2 + tubeOffset[i],
+				//		topTube.getWidth(),topTube.getHeight());
+				//shapeRenderer.rect(tubeX[i],
+				//		Gdx.graphics.getHeight()/2-gap/2-bottomTube.getHeight() + tubeOffset[i],
+				//		bottomTube.getWidth(),bottomTube.getHeight());
+				if(Intersector.overlaps(birdCircle,topTubeRectangles[i]) || Intersector.overlaps(birdCircle,buttomTubeRectangles[i])){
+					Gdx.app.log("collision","yes");
+					gameState = 2;
+				}
 			}
-			if(birdY > 0 || velocity < 0 ){
+			if(birdY > 0 ){
 				velocity = velocity + gravity;
 				birdY -= velocity;
 			}
@@ -127,21 +149,22 @@ public class FlabbyBird extends ApplicationAdapter {
 				gameState = 2;
 			}
 		} else if (gameState == 0) {
+			batch.draw(gameStart, Gdx.graphics.getWidth() / 2 - gameStart.getWidth() / 2,
+					Gdx.graphics.getHeight() / 2 - gameStart.getHeight() / 2);
 			if (Gdx.input.isTouched()) {
 				gameState = 1;
 			}
 		}else if(gameState ==2){
 			batch.draw(gameOver, Gdx.graphics.getWidth() / 2 - gameOver.getWidth() / 2,
 					Gdx.graphics.getHeight() / 2 - gameOver.getHeight() / 2);
+			Score.draw(batch,"Score:"+ String.valueOf(score),400,300);
 			if (Gdx.input.justTouched()) {
-
-				gameState = 1;
+				gameState = 0;
 				startGame();
 				score = 0;
 				scoreTube = 0;
 				velocity = 0;
 			}
-
 		}
 
 		if(flapState == 0){
@@ -151,25 +174,6 @@ public class FlabbyBird extends ApplicationAdapter {
 			flapState = 0;
 		}
 
-		batch.draw(birds[flapState],Gdx.graphics.getWidth()/2 - birds[flapState].getWidth()/2, birdY);
-		font.draw(batch,String.valueOf(score),100,200);
-		birdCircle.set(Gdx.graphics.getWidth()/2,birdY + birds[flapState].getHeight()/2,
-				birds[flapState].getWidth()/2);
-		//shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-		//shapeRenderer.setColor(Color.RED);
-		//shapeRenderer.circle(birdCircle.x,birdCircle.y,birdCircle.radius);
-		for (int i = 0; i < numberOfTubes; i++){
-			//shapeRenderer.rect(tubeX[i],
-			//		Gdx.graphics.getHeight()/2+ gap/2 + tubeOffset[i],
-			//		topTube.getWidth(),topTube.getHeight());
-			//shapeRenderer.rect(tubeX[i],
-			//		Gdx.graphics.getHeight()/2-gap/2-bottomTube.getHeight() + tubeOffset[i],
-			//		bottomTube.getWidth(),bottomTube.getHeight());
-			if(Intersector.overlaps(birdCircle,topTubeRectangles[i]) || Intersector.overlaps(birdCircle,buttonTubeRectangles[i])){
-				Gdx.app.log("collision","yes");
-				gameState = 2;
-			}
-		}
 		batch.end();
 		//shapeRenderer.end();
 	}
@@ -178,6 +182,7 @@ public class FlabbyBird extends ApplicationAdapter {
 	public void dispose () {
 		batch.dispose();
 		background.dispose();
+		music.dispose();
 
 	}
 }
