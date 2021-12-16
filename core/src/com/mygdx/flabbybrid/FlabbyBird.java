@@ -21,7 +21,7 @@ public class FlabbyBird extends ApplicationAdapter {
 	Texture gameOver;
 	float birdY = 0;
 	float velocity = 0;
-	float gravity = 1;
+	float gravity = 0.5f;
 	float gap = 400;
 	Texture topTube;
 	Texture bottomTube;
@@ -114,7 +114,7 @@ public class FlabbyBird extends ApplicationAdapter {
 				}
 			}
 			if (Gdx.input.justTouched()) {
-				velocity = -20;
+				velocity = -10;
 			}
 			for(int i = 0 ; i < numberOfTubes; i++){
 				if(tubeX[i] < -topTube.getWidth()){
